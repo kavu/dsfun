@@ -1,8 +1,10 @@
-use std::error::Error;
-use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 
+use failure::{bail, Error};
+
+use crate::errors::IOError;
 use crate::key_storage::{AbstractKeyStorage, SimpleKeyStorage};
+use crate::reader_writer::{new_file_reader, new_file_writer};
 
 fn decode_chunk(size: usize, key_storage: &mut impl AbstractKeyStorage, buffer: &mut Vec<u8>) {
     println!("Read {:X}", size);
@@ -46,18 +48,17 @@ fn decode_chunk(size: usize, key_storage: &mut impl AbstractKeyStorage, buffer: 
     }
 }
 
-pub fn decode_file(input_path: &str, output_path: &str) -> Result<(), Box<Error>> {
-    let f = File::open(input_path)?;
-    let mut reader = BufReader::new(f);
-
-    let out = File::create(output_path)?;
-    let mut writer = BufWriter::new(out);
+pub fn decode_file(input_path: &str, output_path: &str) -> Result<(), Error> {
+    let mut reader = new_file_reader(input_path)?;
+    let mut writer = new_file_writer(output_path)?;
 
     let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
     let mut key_storage = SimpleKeyStorage::default();
 
-    reader.seek(SeekFrom::Start(0x141))?;
+    if let Err(io_err) = reader.seek(SeekFrom::Start(0x141)) {
+        bail!(IOError::InputFileRead { context: io_err });
+    }
 
     let loop_reader = reader.by_ref();
     loop {
@@ -69,10 +70,13 @@ pub fn decode_file(input_path: &str, output_path: &str) -> Result<(), Box<Error>
                     decode_chunk(size, &mut key_storage, &mut buffer);
                 }
             }
-            Err(err) => panic!(err),
+            Err(io_err) => bail!(IOError::InputFileRead { context: io_err }),
         }
 
-        writer.write_all(&buffer)?;
+        if let Err(io_err) = writer.write_all(&buffer) {
+            bail!(IOError::OutputFileWrite { context: io_err });
+        }
+
         buffer.clear();
     }
 
