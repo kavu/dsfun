@@ -1,15 +1,15 @@
 use clap::{crate_authors, crate_version};
 use failure::Error;
 
-mod coding_loop;
-mod decoder;
-mod encoder;
+mod coder;
 mod errors;
+mod file_io;
 mod key_storage;
-mod reader_writer;
 
-use decoder::decode_file;
-use encoder::encode_file;
+use coder::decode;
+use coder::encode;
+use file_io::{new_file_reader, new_file_writer};
+use key_storage::SimpleKeyStorage;
 
 fn build_cli() -> clap::ArgMatches<'static> {
     let input_argument = clap::Arg::with_name("input")
@@ -52,10 +52,15 @@ fn run() -> Result<(), Error> {
     if let (subcommand, Some(args)) = cli.subcommand() {
         let input_file_path = args.value_of("input").unwrap();
         let output_file_path = args.value_of("output").unwrap();
+        let mut reader = new_file_reader(input_file_path)?;
+        let mut writer = new_file_writer(output_file_path)?;
+
+        let mut key_storage = SimpleKeyStorage::default();
+        let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
         match subcommand {
-            "decode" => decode_file(input_file_path, output_file_path)?,
-            "encode" => encode_file(input_file_path, output_file_path)?,
+            "decode" => decode(&mut reader, &mut writer, &mut key_storage, &mut buffer)?,
+            "encode" => encode(&mut reader, &mut writer, &mut key_storage, &mut buffer)?,
             _ => unreachable!(),
         }
     };

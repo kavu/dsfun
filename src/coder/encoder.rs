@@ -1,11 +1,10 @@
-use std::io::Write;
+use std::io::{Read, Write};
 
 use failure::{bail, Error};
 
-use crate::coding_loop::run_coding_loop;
+use super::coding_loop::run_coding_loop;
 use crate::errors::IOError;
-use crate::key_storage::{SimpleKeyStorage, UnwindableKeyStorage};
-use crate::reader_writer::{new_file_reader, new_file_writer};
+use crate::key_storage::UnwindableKeyStorage;
 
 const HEADER_DATA: &[u8] = &[
     0x44, 0x55, 0x4E, 0x45, 0x20, 0x53, 0x45, 0x52, 0x56, 0x49, 0x43, 0x45, 0x20, 0x46, 0x49, 0x4C,
@@ -47,25 +46,22 @@ fn encode_chunk(size: usize, key_storage: &mut impl UnwindableKeyStorage, buffer
     }
 }
 
-pub fn encode_file(input_path: &str, output_path: &str) -> Result<(), Error> {
-    let mut reader = new_file_reader(input_path)?;
-    let mut writer = new_file_writer(output_path)?;
-
-    let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
-
-    let mut key_storage = SimpleKeyStorage::default();
-
-    if let Err(io_err) = writer.write_all(&HEADER_DATA) {
+pub fn encode<R, W, K>(
+    input: &mut R,
+    output: &mut W,
+    key_storage: &mut K,
+    buffer: &mut Vec<u8>,
+) -> Result<(), Error>
+where
+    R: Read,
+    W: Write,
+    K: UnwindableKeyStorage,
+{
+    if let Err(io_err) = output.write_all(&HEADER_DATA) {
         bail!(IOError::OutputFileWrite { context: io_err });
     }
 
-    run_coding_loop(
-        &mut reader,
-        &mut writer,
-        &mut key_storage,
-        &mut buffer,
-        encode_chunk,
-    )?;
+    run_coding_loop(input, output, key_storage, buffer, encode_chunk)?;
 
     Ok(())
 }

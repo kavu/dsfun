@@ -1,5 +1,3 @@
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
 use std::io::{Read, Write};
 
 use failure::{bail, Error};
@@ -7,14 +5,16 @@ use failure::{bail, Error};
 use crate::errors::IOError;
 use crate::key_storage::UnwindableKeyStorage;
 
-pub fn run_coding_loop<F, S>(
-    reader: &mut BufReader<File>,
-    writer: &mut BufWriter<File>,
+pub fn run_coding_loop<R, W, F, S>(
+    reader: &mut R,
+    writer: &mut W,
     key_storage: &mut S,
     buffer: &mut Vec<u8>,
     coder: F,
 ) -> Result<(), Error>
 where
+    R: Read,
+    W: Write,
     F: Fn(usize, &mut S, &mut Vec<u8>),
     S: UnwindableKeyStorage,
 {
