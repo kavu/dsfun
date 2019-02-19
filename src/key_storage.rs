@@ -5,6 +5,11 @@ const XOR_KEY: &[u8] = &[
 
 pub trait AbstractKeyStorage: Default {
     fn next_key(&mut self) -> u8;
+    fn len(&self) -> usize;
+}
+
+pub trait UnwindableKeyStorage: AbstractKeyStorage {
+    fn unwind(&mut self, index: usize);
 }
 
 pub struct SimpleKeyStorage {
@@ -35,5 +40,15 @@ impl AbstractKeyStorage for SimpleKeyStorage {
         }
 
         item
+    }
+
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+}
+
+impl UnwindableKeyStorage for SimpleKeyStorage {
+    fn unwind(&mut self, index: usize) {
+        self.index = index;
     }
 }
