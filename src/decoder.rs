@@ -1,7 +1,8 @@
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Seek, SeekFrom};
 
 use failure::{bail, Error};
 
+use crate::coding_loop::run_coding_loop;
 use crate::errors::IOError;
 use crate::key_storage::{AbstractKeyStorage, SimpleKeyStorage};
 use crate::reader_writer::{new_file_reader, new_file_writer};
@@ -30,24 +31,13 @@ pub fn decode_file(input_path: &str, output_path: &str) -> Result<(), Error> {
         bail!(IOError::InputFileRead { context: io_err });
     }
 
-    loop {
-        match reader.by_ref().take(0x1000).read_to_end(&mut buffer) {
-            Ok(size) => {
-                if size == 0 {
-                    break;
-                } else {
-                    decode_chunk(size, &mut key_storage, &mut buffer);
-                }
-            }
-            Err(io_err) => bail!(IOError::InputFileRead { context: io_err }),
-        }
-
-        if let Err(io_err) = writer.write_all(&buffer) {
-            bail!(IOError::OutputFileWrite { context: io_err });
-        }
-
-        buffer.clear();
-    }
+    run_coding_loop(
+        &mut reader,
+        &mut writer,
+        &mut key_storage,
+        &mut buffer,
+        decode_chunk,
+    )?;
 
     Ok(())
 }

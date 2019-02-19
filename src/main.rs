@@ -1,14 +1,15 @@
 use clap::{crate_authors, crate_version};
 use failure::Error;
 
+mod coding_loop;
 mod decoder;
 mod encoder;
 mod errors;
 mod key_storage;
 mod reader_writer;
 
-use encoder::encode_file;
 use decoder::decode_file;
+use encoder::encode_file;
 
 fn build_cli() -> clap::ArgMatches<'static> {
     let input_argument = clap::Arg::with_name("input")
