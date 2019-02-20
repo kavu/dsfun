@@ -35,7 +35,5 @@ where
         bail!(IOError::InputFileRead { context: io_err });
     }
 
-    run_coding_loop(input, output, key_storage, buffer, decode_chunk)?;
-
-    Ok(())
+    run_coding_loop(input, output, key_storage, buffer, decode_chunk)
 }

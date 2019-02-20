@@ -61,7 +61,5 @@ where
         bail!(IOError::OutputFileWrite { context: io_err });
     }
 
-    run_coding_loop(input, output, key_storage, buffer, encode_chunk)?;
-
-    Ok(())
+    run_coding_loop(input, output, key_storage, buffer, encode_chunk)
 }
