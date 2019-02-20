@@ -1,15 +1,12 @@
 use clap::{crate_authors, crate_version};
 use failure::Error;
 
-mod coder;
+mod dsf_coder;
 mod errors;
 mod file_io;
-mod key_storage;
 
-use coder::decode;
-use coder::encode;
+use dsf_coder::{decode, encode, SimpleKey};
 use file_io::{new_file_reader, new_file_writer};
-use key_storage::SimpleKeyStorage;
 
 fn build_cli() -> clap::ArgMatches<'static> {
     let input_argument = clap::Arg::with_name("input")
@@ -55,7 +52,7 @@ fn run() -> Result<(), Error> {
         let mut reader = new_file_reader(input_file_path)?;
         let mut writer = new_file_writer(output_file_path)?;
 
-        let mut key_storage = SimpleKeyStorage::default();
+        let mut key_storage = SimpleKey::default();
         let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
         match subcommand {

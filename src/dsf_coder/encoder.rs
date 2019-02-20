@@ -3,8 +3,8 @@ use std::io::{Read, Write};
 use failure::{bail, Error};
 
 use super::coding_loop::run_coding_loop;
+use super::key::UnwindableKey;
 use crate::errors::IOError;
-use crate::key_storage::UnwindableKeyStorage;
 
 const HEADER_DATA: &[u8] = &[
     0x44, 0x55, 0x4E, 0x45, 0x20, 0x53, 0x45, 0x52, 0x56, 0x49, 0x43, 0x45, 0x20, 0x46, 0x49, 0x4C,
@@ -30,7 +30,7 @@ const HEADER_DATA: &[u8] = &[
     0x7F,
 ];
 
-fn encode_chunk(size: usize, key_storage: &mut impl UnwindableKeyStorage, buffer: &mut Vec<u8>) {
+fn encode_chunk(size: usize, key_storage: &mut impl UnwindableKey, buffer: &mut Vec<u8>) {
     let half_size = size >> 1;
 
     key_storage.unwind(half_size % key_storage.len());
@@ -55,7 +55,7 @@ pub fn encode<R, W, K>(
 where
     R: Read,
     W: Write,
-    K: UnwindableKeyStorage,
+    K: UnwindableKey,
 {
     if let Err(io_err) = output.write_all(&HEADER_DATA) {
         bail!(IOError::OutputFileWrite { context: io_err });

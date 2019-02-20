@@ -2,8 +2,8 @@ use std::io::{Read, Write};
 
 use failure::{bail, Error};
 
+use super::key::UnwindableKey;
 use crate::errors::IOError;
-use crate::key_storage::UnwindableKeyStorage;
 
 pub fn run_coding_loop<R, W, F, S>(
     reader: &mut R,
@@ -16,7 +16,7 @@ where
     R: Read,
     W: Write,
     F: Fn(usize, &mut S, &mut Vec<u8>),
-    S: UnwindableKeyStorage,
+    S: UnwindableKey,
 {
     loop {
         match reader.by_ref().take(0x1000).read_to_end(buffer) {
