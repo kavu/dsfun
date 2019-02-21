@@ -1,9 +1,10 @@
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 
 use failure::{bail, Error};
 
 use crate::errors::IOError;
+use crate::dsf_coder::CoderOptions;
 
 pub fn new_file_reader(input_path: &str) -> Result<BufReader<File>, Error> {
     match File::open(input_path) {
@@ -15,8 +16,14 @@ pub fn new_file_reader(input_path: &str) -> Result<BufReader<File>, Error> {
     }
 }
 
-pub fn new_file_writer(output_path: &str) -> Result<BufWriter<File>, Error> {
-    match File::create(output_path) {
+pub fn new_file_writer(output_path: &str, options: CoderOptions) -> Result<BufWriter<File>, Error> {
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .create_new(!&options.get_force())
+        .open(output_path);
+
+    match file {
         Ok(file) => Ok(BufWriter::new(file)),
         Err(io_err) => bail!(IOError::OutputFileOpen {
             context: io_err,

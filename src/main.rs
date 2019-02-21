@@ -5,7 +5,7 @@ mod dsf_coder;
 mod errors;
 mod file_io;
 
-use dsf_coder::{decode, encode, SimpleKey};
+use dsf_coder::{decode, encode, CoderOptions, SimpleKey};
 use file_io::{new_file_reader, new_file_writer};
 
 fn build_cli() -> clap::ArgMatches<'static> {
@@ -21,15 +21,19 @@ fn build_cli() -> clap::ArgMatches<'static> {
         .takes_value(true)
         .required(true);
 
+    let force = clap::Arg::from_usage("-f, --force 'force output file writing'");
+
     let decode_subcommand = clap::SubCommand::with_name("decode")
         .setting(clap::AppSettings::ArgRequiredElseHelp)
         .about("decode a DSF file")
+        .arg(&force)
         .arg(&input_argument)
         .arg(&output_argument);
 
     let encode_subcommand = clap::SubCommand::with_name("encode")
         .setting(clap::AppSettings::ArgRequiredElseHelp)
         .about("encode a DSF file")
+        .arg(&force)
         .arg(&input_argument)
         .arg(&output_argument);
 
@@ -49,8 +53,12 @@ fn run() -> Result<(), Error> {
     if let (subcommand, Some(args)) = cli.subcommand() {
         let input_file_path = args.value_of("input").unwrap();
         let output_file_path = args.value_of("output").unwrap();
+        let force = args.is_present("force");
+
+        let options = CoderOptions::new().force(force);
+
         let mut reader = new_file_reader(input_file_path)?;
-        let mut writer = new_file_writer(output_file_path)?;
+        let mut writer = new_file_writer(output_file_path, options)?;
 
         let mut key_storage = SimpleKey::default();
         let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
