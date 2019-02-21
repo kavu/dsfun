@@ -3,8 +3,8 @@ use std::io::{BufReader, BufWriter};
 
 use failure::{bail, Error};
 
-use crate::errors::IOError;
 use crate::dsf_coder::CoderOptions;
+use crate::errors::IOError;
 
 pub fn new_file_reader(input_path: &str) -> Result<BufReader<File>, Error> {
     match File::open(input_path) {

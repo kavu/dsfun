@@ -5,7 +5,7 @@ mod dsf_coder;
 mod errors;
 mod file_io;
 
-use dsf_coder::{decode, encode, CoderOptions, SimpleKey};
+use dsf_coder::{Coder, CoderOptions, SimpleKey};
 use file_io::{new_file_reader, new_file_writer};
 
 fn build_cli() -> clap::ArgMatches<'static> {
@@ -63,11 +63,9 @@ fn run() -> Result<(), Error> {
         let mut key_storage = SimpleKey::default();
         let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
-        match subcommand {
-            "decode" => decode(&mut reader, &mut writer, &mut key_storage, &mut buffer)?,
-            "encode" => encode(&mut reader, &mut writer, &mut key_storage, &mut buffer)?,
-            _ => unreachable!(),
-        }
+        let coder = Coder::new(&mut reader, &mut writer, &mut key_storage, &mut buffer);
+
+        coder.run(subcommand)?
     };
 
     Ok(())
