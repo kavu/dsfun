@@ -57,13 +57,13 @@ fn run() -> Result<(), Error> {
 
         let options = CoderOptions::new().force(force);
 
-        let mut reader = new_file_reader(input_file_path)?;
-        let mut writer = new_file_writer(output_file_path, options)?;
+        let reader = new_file_reader(input_file_path)?;
+        let writer = new_file_writer(output_file_path, options)?;
 
-        let mut key_storage = SimpleKey::default();
-        let mut buffer: Vec<u8> = Vec::with_capacity(0x1000);
+        let key_storage = SimpleKey::default();
+        let buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
-        let coder = Coder::new(&mut reader, &mut writer, &mut key_storage, &mut buffer);
+        let mut coder = Coder::new(reader, writer, key_storage, buffer);
 
         coder.run(subcommand)?
     };
