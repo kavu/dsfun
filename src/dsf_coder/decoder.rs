@@ -15,14 +15,14 @@ pub fn seek_data_location_in<R: Read + Seek>(input: &mut R) -> Result<(), Error>
     Ok(())
 }
 
-pub fn decode_chunk(size: usize, key_storage: &mut impl AbstractKey, buffer: &mut Vec<u8>) {
+pub fn decode_chunk(size: usize, key_storage: &impl AbstractKey, buffer: &mut Vec<u8>) {
     let half_size = size >> 1;
 
     for idx in 0..half_size {
-        buffer[idx] ^= buffer[idx + half_size] ^ key_storage.next_key();
+        buffer[idx] ^= buffer[idx + half_size] ^ key_storage.get_key(idx);
     }
 
-    for byte in buffer.iter_mut().take(size).skip(half_size) {
-        *byte ^= key_storage.next_key();
+    for (idx, byte) in buffer.iter_mut().enumerate().take(size).skip(half_size) {
+        *byte ^= key_storage.get_key(idx);
     }
 }

@@ -2,7 +2,7 @@ use std::io::Write;
 
 use failure::{bail, Error};
 
-use super::key::UnwindableKey;
+use super::key::AbstractKey;
 use crate::errors::IOError;
 
 const HEADER_DATA: &[u8] = &[
@@ -37,18 +37,14 @@ pub fn write_header_to<W: Write>(output: &mut W) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn encode_chunk(size: usize, key_storage: &mut impl UnwindableKey, buffer: &mut Vec<u8>) {
+pub fn encode_chunk(size: usize, key_storage: &impl AbstractKey, buffer: &mut Vec<u8>) {
     let half_size = size >> 1;
 
-    key_storage.unwind(half_size % key_storage.len());
-
-    for byte in buffer.iter_mut().take(size).skip(half_size) {
-        *byte ^= key_storage.next_key();
+    for (idx, byte) in buffer.iter_mut().enumerate().take(size).skip(half_size) {
+        *byte ^= key_storage.get_key(idx);
     }
 
-    key_storage.unwind(0);
-
     for idx in 0..half_size {
-        buffer[idx] ^= buffer[idx + half_size] ^ key_storage.next_key();
+        buffer[idx] ^= buffer[idx + half_size] ^ key_storage.get_key(idx);
     }
 }

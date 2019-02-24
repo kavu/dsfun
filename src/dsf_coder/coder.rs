@@ -4,7 +4,7 @@ use failure::{bail, Error};
 
 use super::decoder;
 use super::encoder;
-use super::key::UnwindableKey;
+use super::key::AbstractKey;
 use crate::errors::IOError;
 
 pub struct CoderOptions {
@@ -31,7 +31,7 @@ pub struct Coder<R, W, K>
 where
     R: Seek + Read,
     W: Write,
-    K: UnwindableKey,
+    K: AbstractKey,
 {
     input: R,
     output: W,
@@ -43,7 +43,7 @@ impl<R, W, K> Coder<R, W, K>
 where
     R: Seek + Read,
     W: Write,
-    K: UnwindableKey,
+    K: AbstractKey,
 {
     pub fn new(input: R, output: W, key_storage: K, buffer: Vec<u8>) -> Self {
         Coder {
@@ -72,7 +72,7 @@ where
 
     fn run_coding_loop<F>(&mut self, coder: F) -> Result<(), Error>
     where
-        F: Fn(usize, &mut K, &mut Vec<u8>),
+        F: Fn(usize, &K, &mut Vec<u8>),
     {
         loop {
             match self
@@ -85,7 +85,7 @@ where
                     if size == 0 {
                         break;
                     } else {
-                        coder(size, &mut self.key_storage, &mut self.buffer);
+                        coder(size, &self.key_storage, &mut self.buffer);
                     }
                 }
                 Err(io_err) => bail!(IOError::InputFileRead { context: io_err }),
