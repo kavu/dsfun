@@ -45,12 +45,12 @@ where
     W: Write,
     K: AbstractKey,
 {
-    pub fn new(input: R, output: W, key_storage: K, buffer: Vec<u8>) -> Self {
+    pub fn new(input: R, output: W, key_storage: K) -> Self {
         Coder {
             input,
             output,
             key_storage,
-            buffer,
+            buffer: Vec::with_capacity(0x1000),
         }
     }
 

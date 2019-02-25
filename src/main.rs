@@ -61,9 +61,8 @@ fn run() -> Result<(), Error> {
         let writer = new_file_writer(output_file_path, options)?;
 
         let key_storage = SimpleKey::default();
-        let buffer: Vec<u8> = Vec::with_capacity(0x1000);
 
-        let mut coder = Coder::new(reader, writer, key_storage, buffer);
+        let mut coder = Coder::new(reader, writer, key_storage);
 
         coder.run(subcommand)?
     };
