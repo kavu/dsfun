@@ -20,7 +20,7 @@ pub fn new_file_writer(output_path: &str, options: CoderOptions) -> Result<BufWr
     let file = OpenOptions::new()
         .write(true)
         .create(true)
-        .create_new(!&options.get_force())
+        .create_new(!options.get_force())
         .open(output_path);
 
     match file {
