@@ -1,11 +1,12 @@
+#![deny(clippy::all, clippy::pedantic)]
+
 use clap::{crate_authors, crate_version};
-use failure::Error;
 
 mod dsf_coder;
 mod errors;
 mod file_io;
 
-use dsf_coder::{Coder, CoderOptions, SimpleKey};
+use dsf_coder::{Coder, Options, Simple};
 use file_io::{new_file_reader, new_file_writer};
 
 fn build_cli() -> clap::ArgMatches<'static> {
@@ -47,7 +48,7 @@ fn build_cli() -> clap::ArgMatches<'static> {
         .get_matches()
 }
 
-fn run() -> Result<(), Error> {
+fn run() -> Result<(), errors::AppError> {
     let cli = build_cli();
 
     if let (subcommand, Some(args)) = cli.subcommand() {
@@ -55,16 +56,16 @@ fn run() -> Result<(), Error> {
         let output_file_path = args.value_of("output").unwrap();
         let force = args.is_present("force");
 
-        let options = CoderOptions::new().force(force);
+        let options = Options::new().force(force);
 
         let reader = new_file_reader(input_file_path)?;
         let writer = new_file_writer(output_file_path, options)?;
 
-        let key_storage = SimpleKey::default();
+        let key_storage = Simple::default();
 
         let mut coder = Coder::new(reader, writer, key_storage);
 
-        coder.run(subcommand)?
+        coder.run(subcommand)?;
     };
 
     Ok(())
@@ -72,7 +73,7 @@ fn run() -> Result<(), Error> {
 
 fn main() {
     if let Err(err) = run() {
-        eprintln!("{}", err);
+        println!("{}", err);
         std::process::exit(1);
     }
 }

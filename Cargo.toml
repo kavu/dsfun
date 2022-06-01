@@ -1,6 +1,6 @@
 [package]
 name = "dsfun"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Max Riveiro <kavu13@gmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -8,4 +8,4 @@ publish = false
 
 [dependencies]
 clap = "2"
-failure = "0.1"
+thiserror = "1"

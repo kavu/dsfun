@@ -1,8 +1,6 @@
 use std::io::Write;
 
-use failure::{bail, Error};
-
-use super::key::AbstractKey;
+use super::key;
 use crate::errors::IOError;
 
 const HEADER_DATA: &[u8] = &[
@@ -29,15 +27,15 @@ const HEADER_DATA: &[u8] = &[
     0x7F,
 ];
 
-pub fn write_header_to<W: Write>(output: &mut W) -> Result<(), Error> {
+pub fn write_header_to<W: Write>(output: &mut W) -> Result<(), IOError> {
     if let Err(io_err) = output.write_all(HEADER_DATA) {
-        bail!(IOError::OutputFileWrite { context: io_err })
+        return Err(IOError::OutputFileWrite { source: io_err });
     }
 
     Ok(())
 }
 
-pub fn encode_chunk(size: usize, key_storage: &impl AbstractKey, buffer: &mut Vec<u8>) {
+pub fn encode_chunk(size: usize, key_storage: &impl key::Abstract, buffer: &mut Vec<u8>) {
     let half_size = size >> 1;
 
     for (idx, byte) in buffer.iter_mut().enumerate().take(size).skip(half_size) {

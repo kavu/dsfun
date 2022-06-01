@@ -3,28 +3,28 @@ const XOR_TABLE: &[u8; 32] = &[
     0xA2, 0xE6, 0xEC, 0x63, 0xF2, 0xE1, 0x19, 0x76, 0x08, 0x43, 0x38, 0x6F, 0xC5, 0xC1, 0x85, 0x46,
 ];
 
-pub trait AbstractKey: Default {
+pub trait Abstract: Default {
     fn get_key(&self, offset: usize) -> u8;
     fn len(&self) -> usize;
 }
 
-pub struct SimpleKey {
+pub struct Simple {
     data: &'static [u8],
 }
 
-impl SimpleKey {
-    pub fn new(data: &'static [u8; 32]) -> Self {
-        SimpleKey { data }
+impl Simple {
+    pub const fn new(data: &'static [u8; 32]) -> Self {
+        Self { data }
     }
 }
 
-impl Default for SimpleKey {
+impl Default for Simple {
     fn default() -> Self {
-        Self::new(&XOR_TABLE)
+        Self::new(XOR_TABLE)
     }
 }
 
-impl AbstractKey for SimpleKey {
+impl Abstract for Simple {
     fn get_key(&self, offset: usize) -> u8 {
         let index = offset % self.len();
 

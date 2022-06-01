@@ -1,22 +1,20 @@
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 
-use failure::{bail, Error};
-
-use crate::dsf_coder::CoderOptions;
+use crate::dsf_coder::Options;
 use crate::errors::IOError;
 
-pub fn new_file_reader(input_path: &str) -> Result<BufReader<File>, Error> {
+pub fn new_file_reader(input_path: &str) -> Result<BufReader<File>, IOError> {
     match File::open(input_path) {
         Ok(file) => Ok(BufReader::new(file)),
-        Err(io_err) => bail!(IOError::InputFileOpen {
-            context: io_err,
-            path: input_path.into()
+        Err(io_err) => Err(IOError::InputFileOpen {
+            path: input_path.into(),
+            source: io_err,
         }),
     }
 }
 
-pub fn new_file_writer(output_path: &str, options: CoderOptions) -> Result<BufWriter<File>, Error> {
+pub fn new_file_writer(output_path: &str, options: Options) -> Result<BufWriter<File>, IOError> {
     let file = OpenOptions::new()
         .write(true)
         .create(true)
@@ -25,9 +23,9 @@ pub fn new_file_writer(output_path: &str, options: CoderOptions) -> Result<BufWr
 
     match file {
         Ok(file) => Ok(BufWriter::new(file)),
-        Err(io_err) => bail!(IOError::OutputFileOpen {
-            context: io_err,
-            path: output_path.into()
+        Err(io_err) => Err(IOError::OutputFileOpen {
+            path: output_path.into(),
+            source: io_err,
         }),
     }
 }

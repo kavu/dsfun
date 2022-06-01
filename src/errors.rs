@@ -1,24 +1,30 @@
-use std::io::Error;
+use std::io;
 
-use failure::Fail;
+use thiserror::Error;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum IOError {
-    #[fail(
-        display = "There was an error opening input file \"{}\". {}",
-        path, context
-    )]
-    InputFileOpen { path: String, context: Error },
+    #[error("There was an error opening input file \"{path:?}\".")]
+    InputFileOpen { path: String, source: io::Error },
 
-    #[fail(display = "There was an error reading input file. {}", context)]
-    InputFileRead { context: Error },
+    #[error("There was an error reading input file.")]
+    InputFileRead { source: io::Error },
 
-    #[fail(
-        display = "There was an error opening output file \"{}\". {}",
-        path, context
-    )]
-    OutputFileOpen { path: String, context: Error },
+    #[error("There was an error opening output file \"{path:?}\".")]
+    OutputFileOpen { path: String, source: io::Error },
 
-    #[fail(display = "There was an error writing output file. {}", context)]
-    OutputFileWrite { context: Error },
+    #[error("There was an error writing output file.")]
+    OutputFileWrite { source: io::Error },
+}
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("There was an error during processing.")]
+    ProcessingError { source: IOError },
+}
+
+impl From<IOError> for AppError {
+    fn from(err: IOError) -> Self {
+        Self::ProcessingError { source: err }
+    }
 }

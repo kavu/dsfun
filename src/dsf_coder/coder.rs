@@ -1,26 +1,24 @@
 use std::io::{Read, Seek, Write};
 
-use failure::{bail, Error};
-
 use super::decoder;
 use super::encoder;
-use super::key::AbstractKey;
+use super::key::Abstract;
 use crate::errors::IOError;
 
-pub struct CoderOptions {
+pub struct Options {
     force: bool,
 }
 
-impl CoderOptions {
-    pub fn new() -> Self {
-        CoderOptions { force: false }
+impl Options {
+    pub const fn new() -> Self {
+        Self { force: false }
     }
 
-    pub fn get_force(self) -> bool {
+    pub const fn get_force(self) -> bool {
         self.force
     }
 
-    pub fn force(mut self, force: bool) -> Self {
+    pub const fn force(mut self, force: bool) -> Self {
         self.force = force;
 
         self
@@ -31,7 +29,7 @@ pub struct Coder<R, W, K>
 where
     R: Seek + Read,
     W: Write,
-    K: AbstractKey,
+    K: Abstract,
 {
     input: R,
     output: W,
@@ -43,10 +41,10 @@ impl<R, W, K> Coder<R, W, K>
 where
     R: Seek + Read,
     W: Write,
-    K: AbstractKey,
+    K: Abstract,
 {
     pub fn new(input: R, output: W, key_storage: K) -> Self {
-        Coder {
+        Self {
             input,
             output,
             key_storage,
@@ -54,7 +52,7 @@ where
         }
     }
 
-    pub fn run(&mut self, method: &str) -> Result<(), Error> {
+    pub fn run(&mut self, method: &str) -> Result<(), IOError> {
         let processing_fn = match method {
             "decode" => {
                 decoder::seek_data_location_in(&mut self.input)?;
@@ -70,7 +68,7 @@ where
         self.run_coding_loop(processing_fn)
     }
 
-    fn run_coding_loop<F>(&mut self, coder: F) -> Result<(), Error>
+    fn run_coding_loop<F>(&mut self, coder: F) -> Result<(), IOError>
     where
         F: Fn(usize, &K, &mut Vec<u8>),
     {
@@ -84,15 +82,15 @@ where
                 Ok(size) => {
                     if size == 0 {
                         break;
-                    } else {
-                        coder(size, &self.key_storage, &mut self.buffer);
                     }
+
+                    coder(size, &self.key_storage, &mut self.buffer);
                 }
-                Err(io_err) => bail!(IOError::InputFileRead { context: io_err }),
+                Err(io_err) => return Err(IOError::InputFileRead { source: io_err }),
             }
 
             if let Err(io_err) = self.output.write_all(&self.buffer) {
-                bail!(IOError::OutputFileWrite { context: io_err });
+                return Err(IOError::OutputFileWrite { source: io_err });
             }
 
             self.buffer.clear();
